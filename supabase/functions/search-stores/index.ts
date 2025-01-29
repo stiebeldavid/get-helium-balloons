@@ -19,15 +19,22 @@ serve(async (req) => {
       throw new Error('MAPBOX_TOKEN is not configured');
     }
 
-    console.log(`Searching for ${type} (${search}) near [${longitude}, ${latitude}]`);
+    console.log('Search parameters:');
+    console.log('- Type:', type);
+    console.log('- Search term:', search);
+    console.log('- Location:', `[${longitude}, ${latitude}]`);
+    console.log('- Radius:', radiusMiles, 'miles');
 
     // Construct the URL with query parameters in the correct order
     const url = `https://api.mapbox.com/search/searchbox/v1/forward?q=${encodeURIComponent(search)}&language=en&limit=5&proximity=${longitude},${latitude}&country=US&access_token=${MAPBOX_TOKEN}`;
     
-    console.log('Search URL:', url);
+    console.log('Making Mapbox API request:');
+    console.log('- Endpoint: Search Box API v1 Forward');
+    console.log('- Full URL:', url);
 
     const response = await fetch(url);
     if (!response.ok) {
+      console.error('Mapbox API error:', response.status, response.statusText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     
@@ -60,6 +67,7 @@ serve(async (req) => {
       }));
 
     console.log(`Found ${stores.length} stores for ${type}`);
+    console.log('Processed store results:', JSON.stringify(stores, null, 2));
     
     return new Response(
       JSON.stringify(stores),
