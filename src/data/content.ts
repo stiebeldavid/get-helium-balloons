@@ -16,8 +16,7 @@ export const cities: City[] = [
     description: 'Discover helium balloon suppliers throughout Los Angeles. Whether you're in Downtown LA, Hollywood, or the Valley, find the perfect balloon service for your next event.',
     popularAreas: ['Downtown LA', 'Hollywood', 'Santa Monica', 'Beverly Hills', 'Venice'],
     mainZipCodes: ['90001', '90012', '90024', '90210', '90291']
-  },
-  // ... Additional cities can be added here
+  }
 ];
 
 export const eventTypes: EventType[] = [
@@ -44,8 +43,7 @@ export const eventTypes: EventType[] = [
       'Choose durable balloons that last throughout the event'
     ],
     popularBalloonTypes: ['Gender Reveal Balloons', 'Baby-themed Balloons', 'Letter Balloons', 'Balloon Garlands']
-  },
-  // ... Additional event types can be added here
+  }
 ];
 
 export const blogPosts: BlogPost[] = [
@@ -105,6 +103,5 @@ export const blogPosts: BlogPost[] = [
     author: 'Party Planning Expert',
     relatedEvents: ['birthday-parties'],
     relatedCities: ['new-york-city', 'los-angeles']
-  },
-  // ... Additional blog posts can be added here
+  }
 ];
