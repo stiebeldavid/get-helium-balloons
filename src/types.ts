@@ -6,6 +6,7 @@ export interface Store {
   latitude: number;
   longitude: number;
   type: 'Kroger' | 'Albertsons' | 'Publix' | 'Safeway' | 'Food Lion' | 'Dollar Tree' | 'Dollar General' | 'Walmart' | 'Michaels' | 'CVS';
+  distance?: number;
 }
 
 export interface Location {
