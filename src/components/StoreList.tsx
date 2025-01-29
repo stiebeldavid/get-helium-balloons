@@ -23,9 +23,10 @@ const StoreList = ({ stores, searchRadius, onRadiusChange }: StoreListProps) => 
             <SelectValue placeholder="Search radius" />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="5">5 miles</SelectItem>
+            <SelectItem value="10">10 miles</SelectItem>
             <SelectItem value="20">20 miles</SelectItem>
-            <SelectItem value="40">40 miles</SelectItem>
-            <SelectItem value="60">60 miles</SelectItem>
+            <SelectItem value="50">50 miles</SelectItem>
           </SelectContent>
         </Select>
       </div>

@@ -95,7 +95,7 @@ const SearchResults = () => {
   const [location, setLocation] = useState<Location | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchRadius, setSearchRadius] = useState(20);
+  const [searchRadius, setSearchRadius] = useState(5); // Changed default to 5 miles
 
   useEffect(() => {
     const initializeSearch = async () => {
