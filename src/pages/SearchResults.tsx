@@ -7,6 +7,9 @@ import SearchForm from '@/components/SearchForm';
 import { Store, Location } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { Slider } from "@/components/ui/slider";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const STORE_TYPES = ['Kroger', 'Albertsons', 'Publix', 'Safeway', 'Food Lion', 'Dollar Tree', 'Dollar General', 'Walmart', 'Michaels', 'CVS'];
 
@@ -15,9 +18,39 @@ const SearchResults = () => {
   const [location, setLocation] = useState<Location | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchRadius, setSearchRadius] = useState(20);
+
+  const fetchStores = async (latitude: number, longitude: number, radius: number, mapboxToken: string) => {
+    const storePromises = STORE_TYPES.map(async (type) => {
+      // Convert radius from miles to meters (1 mile ≈ 1609.34 meters)
+      const radiusMeters = radius * 1609.34;
+      const response = await fetch(
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${type}.json?proximity=${longitude},${latitude}&types=poi&limit=3&radius=${radiusMeters}&access_token=${mapboxToken}`
+      );
+      const data = await response.json();
+      
+      if (!data.features) {
+        console.error('No features returned for type:', type);
+        return [];
+      }
+
+      return data.features.map((feature: any) => ({
+        id: feature.id,
+        name: feature.text,
+        address: feature.place_name,
+        phone: "(Call store for details)", // Mapbox doesn't provide phone numbers
+        latitude: feature.center[1],
+        longitude: feature.center[0],
+        type: type as Store['type']
+      }));
+    });
+
+    const storeResults = await Promise.all(storePromises);
+    return storeResults.flat();
+  };
 
   useEffect(() => {
-    const fetchStores = async () => {
+    const initializeSearch = async () => {
       try {
         setLoading(true);
         
@@ -53,25 +86,9 @@ const SearchResults = () => {
           zipCode: zipCode || "",
         });
 
-        // Now search for stores near this location
-        const storePromises = STORE_TYPES.map(async (type) => {
-          const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${type}.json?proximity=${longitude},${latitude}&types=poi&limit=2&access_token=${MAPBOX_TOKEN}`
-          );
-          const data = await response.json();
-          return data.features.map((feature: any) => ({
-            id: feature.id,
-            name: feature.text,
-            address: feature.place_name,
-            phone: "(Call store for details)", // Mapbox doesn't provide phone numbers
-            latitude: feature.center[1],
-            longitude: feature.center[0],
-            type: type as Store['type']
-          }));
-        });
-
-        const storeResults = await Promise.all(storePromises);
-        setStores(storeResults.flat());
+        // Search for stores with current radius
+        const storeResults = await fetchStores(latitude, longitude, searchRadius, MAPBOX_TOKEN);
+        setStores(storeResults);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching stores:', error);
@@ -81,9 +98,13 @@ const SearchResults = () => {
     };
 
     if (zipCode) {
-      fetchStores();
+      initializeSearch();
     }
-  }, [zipCode]);
+  }, [zipCode, searchRadius]);
+
+  const handleRadiusChange = (value: number[]) => {
+    setSearchRadius(value[0]);
+  };
 
   if (loading || !location) {
     return (
@@ -113,6 +134,20 @@ const SearchResults = () => {
             <h1 className="text-3xl font-bold mb-6">
               Helium Balloon Stores in {location.city}, {location.state}
             </h1>
+
+            <div className="mb-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Search Radius: {searchRadius} miles
+              </label>
+              <Slider
+                defaultValue={[20]}
+                max={60}
+                min={20}
+                step={20}
+                onValueChange={handleRadiusChange}
+                className="w-full max-w-xs"
+              />
+            </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               <div>

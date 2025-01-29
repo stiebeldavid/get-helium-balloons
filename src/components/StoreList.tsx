@@ -1,12 +1,25 @@
 import { Store } from '@/types';
 import { Card } from '@/components/ui/card';
 import { ExternalLink } from 'lucide-react';
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 interface StoreListProps {
   stores: Store[];
 }
 
 const StoreList = ({ stores }: StoreListProps) => {
+  if (stores.length === 0) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          No stores found within the selected radius. Try increasing the search radius to find more stores.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   return (
     <div className="space-y-4">
       {stores.map((store) => (
