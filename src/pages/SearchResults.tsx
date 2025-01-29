@@ -29,9 +29,13 @@ const STORE_SEARCHES = [
 const EXCLUDED_STORE_NAMES = [
   'cvs pharmacy',
   'cvs photo',
+  'minuteclinic cvs',
   'kroger fuel',
   'kroger deli',
+  'kroger pharmacy',
   'safeway lending',
+  'safeway bakery',
+  'safeway pharmacy',
   'walmart money center',
   'walmart business center',
   'walmart vision',
