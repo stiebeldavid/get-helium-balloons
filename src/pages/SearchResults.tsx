@@ -31,57 +31,79 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [searchRadius, setSearchRadius] = useState(20);
 
-  const fetchStores = async (latitude: number, longitude: number, radius: number, mapboxToken: string) => {
-    const storePromises = STORE_SEARCHES.map(async ({ type, search }) => {
-      // Convert radius from miles to meters (1 mile ≈ 1609.34 meters)
-      const radiusMeters = radius * 1609.34;
-      
-      // Enhanced search URL with better parameters
-      const url = new URL('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(search) + '.json');
-      url.searchParams.append('proximity', `${longitude},${latitude}`);
-      url.searchParams.append('types', 'poi');
-      url.searchParams.append('limit', '5');
-      url.searchParams.append('radius', radiusMeters.toString());
-      url.searchParams.append('fuzzyMatch', 'true');
-      url.searchParams.append('access_token', mapboxToken);
-      
-      try {
-        const response = await fetch(url);
-        const data = await response.json();
-        
-        if (!data.features) {
-          console.error('No features returned for type:', type);
-          return [];
-        }
+  // Separate function to handle individual store search
+  const searchStore = async (
+    type: string,
+    search: string,
+    latitude: number,
+    longitude: number,
+    radiusMeters: number,
+    mapboxToken: string
+  ): Promise<Store[]> => {
+    try {
+      const searchUrl = new URL('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(search) + '.json');
+      searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
+      searchUrl.searchParams.set('types', 'poi');
+      searchUrl.searchParams.set('limit', '5');
+      searchUrl.searchParams.set('radius', radiusMeters.toString());
+      searchUrl.searchParams.set('fuzzyMatch', 'true');
+      searchUrl.searchParams.set('access_token', mapboxToken);
 
-        // Filter results to ensure they match our search term more closely
-        const filteredFeatures = data.features.filter((feature: any) => {
+      const response = await fetch(searchUrl.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.features?.length) {
+        console.log(`No results found for ${type}`);
+        return [];
+      }
+
+      // Filter results to ensure they match our search term more closely
+      return data.features
+        .filter((feature: any) => {
           const name = feature.text.toLowerCase();
           const searchTerms = search.toLowerCase().split(' ');
           return searchTerms.some(term => name.includes(term.toLowerCase()));
-        });
-
-        return filteredFeatures.map((feature: any) => ({
+        })
+        .map((feature: any) => ({
           id: feature.id,
           name: feature.text,
           address: feature.place_name,
-          phone: "(Call store for details)", // Mapbox doesn't provide phone numbers
+          phone: "(Call store for details)",
           latitude: feature.center[1],
           longitude: feature.center[0],
           type: type as Store['type']
         }));
-      } catch (error) {
-        console.error(`Error fetching ${type} stores:`, error);
-        return [];
-      }
-    });
+    } catch (error) {
+      console.error(`Error searching for ${type}:`, error);
+      return [];
+    }
+  };
 
-    const storeResults = await Promise.all(storePromises);
-    return storeResults.flat();
+  const fetchStores = async (latitude: number, longitude: number, radius: number, mapboxToken: string) => {
+    const radiusMeters = radius * 1609.34; // Convert miles to meters
+    
+    try {
+      const results = await Promise.all(
+        STORE_SEARCHES.map(({ type, search }) =>
+          searchStore(type, search, latitude, longitude, radiusMeters, mapboxToken)
+        )
+      );
+      
+      return results.flat();
+    } catch (error) {
+      console.error('Error fetching stores:', error);
+      return [];
+    }
   };
 
   useEffect(() => {
     const initializeSearch = async () => {
+      if (!zipCode) return;
+
       try {
         setLoading(true);
         
@@ -94,10 +116,17 @@ const SearchResults = () => {
           throw new Error('Could not retrieve Mapbox token');
         }
         
-        // First, convert ZIP code to coordinates using Mapbox Geocoding API
-        const geocodingResponse = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?country=US&types=postcode&access_token=${MAPBOX_TOKEN}`
-        );
+        // Convert ZIP code to coordinates
+        const geocodingUrl = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json`);
+        geocodingUrl.searchParams.set('country', 'US');
+        geocodingUrl.searchParams.set('types', 'postcode');
+        geocodingUrl.searchParams.set('access_token', MAPBOX_TOKEN);
+        
+        const geocodingResponse = await fetch(geocodingUrl.toString());
+        if (!geocodingResponse.ok) {
+          throw new Error('Failed to geocode ZIP code');
+        }
+        
         const geocodingData = await geocodingResponse.json();
         
         if (!geocodingData.features?.length) {
@@ -114,28 +143,22 @@ const SearchResults = () => {
           longitude,
           city,
           state,
-          zipCode: zipCode || "",
+          zipCode: zipCode,
         });
 
-        // Search for stores with current radius
+        // Search for stores
         const storeResults = await fetchStores(latitude, longitude, searchRadius, MAPBOX_TOKEN);
         setStores(storeResults);
-        setLoading(false);
       } catch (error) {
-        console.error('Error fetching stores:', error);
+        console.error('Error in search initialization:', error);
         toast.error('Error finding stores. Please try again.');
+      } finally {
         setLoading(false);
       }
     };
 
-    if (zipCode) {
-      initializeSearch();
-    }
+    initializeSearch();
   }, [zipCode, searchRadius]);
-
-  const handleRadiusChange = (value: number[]) => {
-    setSearchRadius(value[0]);
-  };
 
   if (loading || !location) {
     return (
