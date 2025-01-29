@@ -99,7 +99,7 @@ const LocationMap = ({ stores, center, selectedStoreId }: LocationMapProps) => {
   }, [selectedStoreId, stores]);
 
   return (
-    <div className="h-[500px] w-full rounded-lg overflow-hidden shadow-lg">
+    <div className="h-[500px] md:h-[500px] h-[350px] w-full rounded-lg overflow-hidden shadow-lg">
       <div ref={mapContainer} className="h-full w-full" />
     </div>
   );
