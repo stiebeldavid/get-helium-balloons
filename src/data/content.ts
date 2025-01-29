@@ -52,52 +52,36 @@ export const blogPosts: BlogPost[] = [
     slug: 'ultimate-guide-birthday-party-planning',
     excerpt: 'Everything you need to know about planning the perfect birthday celebration for your child, from decorations to entertainment.',
     content: `
-      Planning a child's birthday party can seem overwhelming, but with the right preparation, it can be a fun and rewarding experience. Here's your complete guide to creating an unforgettable celebration.
+      <h2>Planning a Child's Birthday Party</h2>
+      <p>Planning a child's birthday party can seem overwhelming, but with the right preparation, it can be a fun and rewarding experience. Here's your complete guide to creating an unforgettable celebration.</p>
 
-      ## Choosing the Perfect Theme
-      The theme sets the tone for your entire party. Consider your child's current interests and favorite characters. Popular themes include:
-      - Superheroes
-      - Princess parties
-      - Space adventures
-      - Animal themes
-      - Sports celebrations
+      <h3>Choosing the Perfect Theme</h3>
+      <p>The theme sets the tone for your entire party. Consider your child's current interests and favorite characters. Popular themes include:</p>
+      <ul>
+        <li>Superheroes</li>
+        <li>Princess parties</li>
+        <li>Space adventures</li>
+        <li>Animal themes</li>
+        <li>Sports celebrations</li>
+      </ul>
 
-      ## Balloon Decorations
-      No birthday party is complete without balloons! They're essential for:
-      - Creating a festive atmosphere
-      - Photo opportunities
-      - Party games and activities
-      - Take-home decorations
+      <h3>Balloon Decorations</h3>
+      <p>No birthday party is complete without balloons! They're essential for:</p>
+      <ul>
+        <li>Creating a festive atmosphere</li>
+        <li>Photo opportunities</li>
+        <li>Party games and activities</li>
+        <li>Take-home decorations</li>
+      </ul>
 
-      ### Tips for Balloon Success
-      1. Order balloons 1-2 days before the party
-      2. Choose colors that match your theme
-      3. Consider balloon arches or columns for wow factor
-      4. Mix different sizes and types of balloons
-      
-      ## Entertainment Ideas
-      Keep your young guests engaged with:
-      - Party games
-      - Craft activities
-      - Face painting
-      - Music and dancing
-      
-      ## Food and Refreshments
-      Balance fun and nutrition with:
-      - Birthday cake
-      - Healthy snacks
-      - Juice boxes
-      - Party favors
-
-      ## Timeline Planning
-      Create a schedule to ensure everything runs smoothly:
-      - Setup time
-      - Arrival of guests
-      - Activities and games
-      - Cake and presents
-      - Parent pickup
-
-      Remember, the key to a successful party is preparation and flexibility. Don't stress too much about perfection – the kids will have fun regardless!
+      <h3>Entertainment Ideas</h3>
+      <p>Keep your young guests engaged with:</p>
+      <ul>
+        <li>Party games</li>
+        <li>Craft activities</li>
+        <li>Face painting</li>
+        <li>Music and dancing</li>
+      </ul>
     `,
     publishDate: '2024-03-15',
     author: 'Party Planning Expert',
