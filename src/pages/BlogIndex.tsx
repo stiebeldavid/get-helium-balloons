@@ -32,18 +32,18 @@ const BlogIndex = () => {
             
             <div className="grid gap-6">
               {blogPosts.map(post => (
-                <Card key={post.slug} className="p-6">
-                  <h2 className="text-2xl font-semibold mb-2">
-                    <Link to={`/blog/${post.slug}`} className="hover:text-blue-600">
+                <Link key={post.slug} to={`/blog/${post.slug}`}>
+                  <Card className="p-6 hover:shadow-lg transition-shadow">
+                    <h2 className="text-2xl font-semibold mb-2 text-gray-900 hover:text-blue-600">
                       {post.title}
-                    </Link>
-                  </h2>
-                  <p className="text-gray-600 mb-4">{post.excerpt}</p>
-                  <div className="flex justify-between items-center text-sm text-gray-500">
-                    <span>{post.author}</span>
-                    <span>{new Date(post.publishDate).toLocaleDateString()}</span>
-                  </div>
-                </Card>
+                    </h2>
+                    <p className="text-gray-600 mb-4">{post.excerpt}</p>
+                    <div className="flex justify-between items-center text-sm text-gray-500">
+                      <span>{post.author}</span>
+                      <span>{new Date(post.publishDate).toLocaleDateString()}</span>
+                    </div>
+                  </Card>
+                </Link>
               ))}
             </div>
           </div>

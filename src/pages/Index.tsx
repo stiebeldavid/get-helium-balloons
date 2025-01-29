@@ -1,6 +1,8 @@
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 import SearchForm from '@/components/SearchForm';
 import { Card } from '@/components/ui/card';
+import { cities, eventTypes } from '@/data/content';
 
 const Index = () => {
   return (
@@ -50,12 +52,15 @@ const Index = () => {
 
               <Card className="p-6">
                 <h2 className="text-xl font-semibold mb-4">Perfect For Every Occasion</h2>
-                <ul className="space-y-2 text-gray-600">
-                  <li>Birthday Parties - Make celebrations extra special</li>
-                  <li>Graduations - Mark academic achievements</li>
-                  <li>Baby Showers - Create magical moments</li>
-                  <li>Corporate Events - Add professional flair</li>
-                  <li>Holiday Decorations - Enhance festive atmospheres</li>
+                <ul className="space-y-2">
+                  {eventTypes.map(event => (
+                    <li key={event.slug} className="text-gray-600">
+                      <Link to={`/events/${event.slug}`} className="hover:text-blue-600 hover:underline">
+                        {event.name}
+                      </Link>
+                      {' '}- {event.description.split('.')[0]}
+                    </li>
+                  ))}
                 </ul>
               </Card>
             </div>
@@ -77,6 +82,21 @@ const Index = () => {
                     Most stores offer latex and foil balloon options, custom balloon bouquets, and professional filling services. Some locations also provide balloon arches, columns, and other decorative arrangements for special events.
                   </p>
                 </div>
+              </div>
+            </div>
+
+            <div className="mt-16 border-t pt-8">
+              <h2 className="text-2xl font-semibold mb-6">Popular Cities</h2>
+              <div className="flex flex-wrap justify-center gap-4">
+                {cities.map(city => (
+                  <Link
+                    key={city.slug}
+                    to={`/city/${city.slug}`}
+                    className="px-4 py-2 bg-white rounded-full shadow-sm hover:shadow-md transition-shadow text-gray-700 hover:text-blue-600"
+                  >
+                    {city.name}, {city.state}
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
