@@ -240,7 +240,19 @@ const SearchResults = () => {
         <title>Helium Balloons in {location?.city}, {location?.state} | Balloon Finder</title>
         <meta 
           name="description" 
-          content={`Find stores that sell and fill helium balloons in ${location?.city}, ${location?.state}. Locations include Walmart, CVS, Party City, and more.`}
+          content={`Find stores that sell and fill helium balloons in ${location?.city}, ${location?.state}. Compare prices and services at Walmart, Party City, Dollar Tree, and more locations near ${zipCode}.`}
+        />
+        <meta 
+          name="keywords" 
+          content={`helium balloons ${location?.city}, balloon stores ${location?.state}, party supplies ${zipCode}, balloon filling services`} 
+        />
+        <meta 
+          property="og:title" 
+          content={`Helium Balloons in ${location?.city}, ${location?.state} | Balloon Finder`} 
+        />
+        <meta 
+          property="og:description" 
+          content={`Discover the best places to buy and fill helium balloons in ${location?.city}. Compare local stores and find the perfect balloon supplier near you.`} 
         />
       </Helmet>
 
@@ -267,9 +279,14 @@ const SearchResults = () => {
               <SearchForm />
             </div>
 
-            <h1 className="text-3xl font-bold mb-6">
-              Helium balloons near {location?.city}, {location?.state}
-            </h1>
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold mb-4">
+                Helium Balloons in {location?.city}, {location?.state}
+              </h1>
+              <p className="text-gray-600">
+                Find local stores that sell and fill helium balloons near {zipCode}. Compare prices, services, and locations to find the perfect balloon supplier for your needs.
+              </p>
+            </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               <div>
@@ -286,6 +303,24 @@ const SearchResults = () => {
                   onRadiusChange={setSearchRadius}
                   onStoreSelect={setSelectedStoreId}
                 />
+              </div>
+            </div>
+
+            <div className="mt-12 text-left">
+              <h2 className="text-2xl font-semibold mb-6">About Balloon Services in {location?.city}</h2>
+              <div className="grid md:grid-cols-2 gap-8">
+                <div>
+                  <h3 className="text-xl font-medium mb-3">Local Balloon Options</h3>
+                  <p className="text-gray-600">
+                    Stores in {location?.city} offer a variety of balloon services, from basic helium filling to elaborate balloon arrangements. Many locations provide both latex and foil balloons, with options for custom designs and professional decoration services.
+                  </p>
+                </div>
+                <div>
+                  <h3 className="text-xl font-medium mb-3">Pricing Information</h3>
+                  <p className="text-gray-600">
+                    Balloon prices vary by store and type. Basic helium filling services typically start around $1-2 per balloon, while specialty arrangements and custom designs may cost more. Contact stores directly for current pricing and package deals.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
