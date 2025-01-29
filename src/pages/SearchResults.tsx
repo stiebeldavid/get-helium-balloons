@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import LocationMap from '@/components/LocationMap';
 import StoreList from '@/components/StoreList';
@@ -7,9 +7,8 @@ import SearchForm from '@/components/SearchForm';
 import { Store, Location } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Slider } from "@/components/ui/slider";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
+import { Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const STORE_TYPES = ['Kroger', 'Albertsons', 'Publix', 'Safeway', 'Food Lion', 'Dollar Tree', 'Dollar General', 'Walmart', 'Michaels', 'CVS'];
 
@@ -117,47 +116,43 @@ const SearchResults = () => {
   return (
     <>
       <Helmet>
-        <title>Helium Balloons in {location.city}, {location.state} | Balloon Finder</title>
+        <title>Helium Balloons in {location?.city}, {location?.state} | Balloon Finder</title>
         <meta 
           name="description" 
-          content={`Find stores that sell and fill helium balloons in ${location.city}, ${location.state}. Locations include Walmart, CVS, Party City, and more.`}
+          content={`Find stores that sell and fill helium balloons in ${location?.city}, ${location?.state}. Locations include Walmart, CVS, Party City, and more.`}
         />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-white to-blue-50">
         <div className="container px-4 py-8">
           <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
+            <div className="flex justify-between items-center mb-8">
+              <Link to="/">
+                <Button variant="outline" size="sm" className="flex items-center gap-2">
+                  <Home className="h-4 w-4" />
+                  Home
+                </Button>
+              </Link>
               <SearchForm />
             </div>
 
             <h1 className="text-3xl font-bold mb-6">
-              Helium Balloon Stores in {location.city}, {location.state}
+              Helium Balloon Stores in {location?.city}, {location?.state}
             </h1>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search Radius: {searchRadius} miles
-              </label>
-              <Slider
-                defaultValue={[20]}
-                max={60}
-                min={20}
-                step={20}
-                onValueChange={handleRadiusChange}
-                className="w-full max-w-xs"
-              />
-            </div>
 
             <div className="grid lg:grid-cols-2 gap-8">
               <div>
                 <LocationMap 
                   stores={stores} 
-                  center={[location.longitude, location.latitude]} 
+                  center={[location?.longitude || 0, location?.latitude || 0]} 
                 />
               </div>
               <div>
-                <StoreList stores={stores} />
+                <StoreList 
+                  stores={stores} 
+                  searchRadius={searchRadius}
+                  onRadiusChange={setSearchRadius}
+                />
               </div>
             </div>
           </div>
