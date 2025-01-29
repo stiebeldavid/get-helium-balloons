@@ -24,6 +24,21 @@ const STORE_SEARCHES = [
   { type: 'CVS', search: 'CVS Pharmacy' }
 ];
 
+// Calculate bounding box based on coordinates and radius in miles
+const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: number) => {
+  // Rough approximation: 1 degree = 69 miles
+  const degreesPerMile = 1 / 69;
+  const latDelta = radiusMiles * degreesPerMile;
+  const lonDelta = radiusMiles * degreesPerMile / Math.cos(latitude * Math.PI / 180);
+
+  return {
+    minLon: longitude - lonDelta,
+    minLat: latitude - latDelta,
+    maxLon: longitude + lonDelta,
+    maxLat: latitude + latDelta
+  };
+};
+
 const SearchResults = () => {
   const { zipCode } = useParams();
   const [location, setLocation] = useState<Location | null>(null);
@@ -31,42 +46,66 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(true);
   const [searchRadius, setSearchRadius] = useState(20);
 
-  // Search for stores using the Edge Function
+  // Separate function to handle individual store search
   const searchStore = async (
     type: string,
     search: string,
     latitude: number,
     longitude: number,
-    radiusMiles: number
+    radiusMiles: number,
+    mapboxToken: string
   ): Promise<Store[]> => {
     try {
-      const { data, error } = await supabase.functions.invoke('search-stores', {
-        body: {
-          latitude,
-          longitude,
-          radiusMiles,
-          storeType: type,
-          searchTerm: search
-        }
-      });
+      const bbox = calculateBoundingBox(latitude, longitude, radiusMiles);
+      // Using the geocoding API instead of the search API
+      const searchUrl = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(search)}.json`);
+      searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
+      searchUrl.searchParams.set('bbox', `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}`);
+      searchUrl.searchParams.set('limit', '5');
+      searchUrl.searchParams.set('types', 'poi');
+      searchUrl.searchParams.set('access_token', mapboxToken);
+      
+      console.log(`Searching for ${type} with URL:`, searchUrl.toString());
 
-      if (error) {
-        console.error(`Error searching for ${type}:`, error);
+      const response = await fetch(searchUrl.toString());
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data.features?.length) {
+        console.log(`No results found for ${type}`);
         return [];
       }
 
-      return data.stores || [];
+      // Map the features to our Store type
+      return data.features
+        .filter((feature: any) => {
+          const name = feature.text.toLowerCase();
+          const searchTerms = search.toLowerCase().split(' ');
+          return searchTerms.some(term => name.includes(term.toLowerCase()));
+        })
+        .map((feature: any) => ({
+          id: feature.id,
+          name: feature.text,
+          address: feature.place_name,
+          phone: "(Call store for details)",
+          latitude: feature.center[1],
+          longitude: feature.center[0],
+          type: type as Store['type']
+        }));
     } catch (error) {
       console.error(`Error searching for ${type}:`, error);
       return [];
     }
   };
 
-  const fetchStores = async (latitude: number, longitude: number, radius: number) => {
+  const fetchStores = async (latitude: number, longitude: number, radius: number, mapboxToken: string) => {
     try {
       const results = await Promise.all(
         STORE_SEARCHES.map(({ type, search }) =>
-          searchStore(type, search, latitude, longitude, radius)
+          searchStore(type, search, latitude, longitude, radius, mapboxToken)
         )
       );
       
@@ -123,8 +162,8 @@ const SearchResults = () => {
           zipCode: zipCode,
         });
 
-        // Search for stores using the Edge Function
-        const storeResults = await fetchStores(latitude, longitude, searchRadius);
+        // Search for stores
+        const storeResults = await fetchStores(latitude, longitude, searchRadius, MAPBOX_TOKEN);
         setStores(storeResults);
       } catch (error) {
         console.error('Error in search initialization:', error);
