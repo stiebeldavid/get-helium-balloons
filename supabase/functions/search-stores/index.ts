@@ -39,12 +39,15 @@ serve(async (req) => {
       throw new Error('Mapbox token not configured');
     }
 
-    // Construct Mapbox API URL
-    const searchUrl = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(searchTerm)}.json`);
+    // Construct Mapbox Search Box API URL
+    const searchUrl = new URL('https://api.mapbox.com/search/searchbox/v1/forward');
+    searchUrl.searchParams.set('q', searchTerm);
     searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
     searchUrl.searchParams.set('bbox', `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}`);
     searchUrl.searchParams.set('limit', '5');
     searchUrl.searchParams.set('types', 'poi');
+    searchUrl.searchParams.set('country', 'US');
+    searchUrl.searchParams.set('language', 'en');
     searchUrl.searchParams.set('access_token', MAPBOX_TOKEN);
 
     console.log(`Searching for ${storeType} with URL:`, searchUrl.toString());
@@ -67,17 +70,17 @@ serve(async (req) => {
     // Map the features to our Store type
     const stores = data.features
       .filter((feature: any) => {
-        const name = feature.text.toLowerCase();
+        const name = feature.properties.name.toLowerCase();
         const terms = searchTerm.toLowerCase().split(' ');
         return terms.some(term => name.includes(term.toLowerCase()));
       })
       .map((feature: any) => ({
-        id: feature.id,
-        name: feature.text,
-        address: feature.place_name,
+        id: feature.properties.mapbox_id,
+        name: feature.properties.name,
+        address: feature.properties.full_address || feature.properties.address,
         phone: "(Call store for details)",
-        latitude: feature.center[1],
-        longitude: feature.center[0],
+        latitude: feature.properties.coordinates.latitude,
+        longitude: feature.properties.coordinates.longitude,
         type: storeType
       }));
 
