@@ -26,6 +26,22 @@ const STORE_SEARCHES = [
   { type: 'CVS', search: 'CVS' }
 ];
 
+const EXCLUDED_STORE_NAMES = [
+  'cvs pharmacy',
+  'cvs photo',
+  'kroger fuel',
+  'kroger deli',
+  'safeway lending',
+  'walmart money center',
+  'walmart business center',
+  'walmart vision',
+  'walmart glasses',
+  'walmart patio',
+  'walmart garden',
+  'walmart baby',
+  'walmart nursery'
+];
+
 const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: number) => {
   const degreesPerMile = 1 / 69;
   const latDelta = radiusMiles * degreesPerMile;
@@ -89,7 +105,14 @@ const searchStore = async (
       .filter((feature: any) => {
         const name = feature.properties.name?.toLowerCase() || '';
         const searchTerm = search.toLowerCase();
-        return name.includes(searchTerm);
+        
+        // First check if it matches the search term
+        if (!name.includes(searchTerm)) {
+          return false;
+        }
+        
+        // Then check if it contains any excluded terms
+        return !EXCLUDED_STORE_NAMES.some(excluded => name.includes(excluded));
       })
       .map((feature: any) => ({
         id: feature.id,
