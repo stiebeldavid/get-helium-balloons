@@ -1,6 +1,7 @@
 import { Helmet } from 'react-helmet';
 import SearchForm from '@/components/SearchForm';
 import { Card } from '@/components/ui/card';
+import { ChevronLeft } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -13,6 +14,10 @@ const Index = () => {
       <div className="min-h-screen bg-gradient-to-b from-white to-blue-50">
         <div className="container px-4 py-12">
           <div className="max-w-4xl mx-auto text-center">
+            <div className="md:hidden mb-4 text-left">
+              <ChevronLeft className="h-6 w-6 text-gray-500" />
+            </div>
+            
             <div className="animate-float mb-8">
               <span className="text-6xl">🎈</span>
             </div>
