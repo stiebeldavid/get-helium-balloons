@@ -36,6 +36,19 @@ const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: 
   };
 };
 
+// New helper function to calculate distance between two points
+const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+  const R = 3959; // Earth's radius in miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  return R * c;
+};
+
 const searchStore = async (
   type: string,
   search: string,
@@ -55,7 +68,7 @@ const searchStore = async (
     searchUrl.searchParams.set('types', 'poi');
     searchUrl.searchParams.set('access_token', mapboxToken);
 
-    console.log(`Searching for ${type}`); // Only log non-sensitive info
+    console.log(`Searching for ${type}`);
 
     const response = await fetch(searchUrl.toString());
     if (!response.ok) {
@@ -95,7 +108,7 @@ const SearchResults = () => {
   const [location, setLocation] = useState<Location | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchRadius, setSearchRadius] = useState(5); // Changed default to 5 miles
+  const [searchRadius, setSearchRadius] = useState(5);
 
   useEffect(() => {
     const initializeSearch = async () => {
@@ -104,7 +117,6 @@ const SearchResults = () => {
       try {
         setLoading(true);
         
-        // Get Mapbox token from Supabase
         const { data: { MAPBOX_TOKEN }, error: secretError } = await supabase.functions.invoke('get-secret', {
           body: { secretName: 'MAPBOX_TOKEN' }
         });
@@ -113,7 +125,6 @@ const SearchResults = () => {
           throw new Error('Could not retrieve Mapbox token');
         }
         
-        // Convert ZIP code to coordinates using Mapbox Geocoding API
         const geocodingUrl = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json`);
         geocodingUrl.searchParams.set('country', 'US');
         geocodingUrl.searchParams.set('types', 'postcode');
@@ -143,14 +154,22 @@ const SearchResults = () => {
           zipCode: zipCode,
         });
 
-        // Search for stores using the frontend implementation
         const storeResults = await Promise.all(
           STORE_SEARCHES.map(({ type, search }) =>
             searchStore(type, search, latitude, longitude, searchRadius, MAPBOX_TOKEN)
           )
         );
         
-        setStores(storeResults.flat());
+        // Flatten and sort the results by distance
+        const sortedStores = storeResults
+          .flat()
+          .map(store => ({
+            ...store,
+            distance: calculateDistance(latitude, longitude, store.latitude, store.longitude)
+          }))
+          .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+
+        setStores(sortedStores);
       } catch (error) {
         console.error('Error in search initialization:', error);
         toast.error('Error finding stores. Please try again.');
