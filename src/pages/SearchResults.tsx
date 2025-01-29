@@ -57,11 +57,12 @@ const SearchResults = () => {
   ): Promise<Store[]> => {
     try {
       const bbox = calculateBoundingBox(latitude, longitude, radiusMiles);
-      const searchUrl = new URL('https://api.mapbox.com/search/v1/suggest');
-      searchUrl.searchParams.set('q', search);
+      // Using the geocoding API instead of the search API
+      const searchUrl = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(search)}.json`);
       searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
       searchUrl.searchParams.set('bbox', `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}`);
       searchUrl.searchParams.set('limit', '5');
+      searchUrl.searchParams.set('types', 'poi');
       searchUrl.searchParams.set('access_token', mapboxToken);
       
       console.log(`Searching for ${type} with URL:`, searchUrl.toString());
@@ -73,25 +74,25 @@ const SearchResults = () => {
       
       const data = await response.json();
       
-      if (!data.suggestions?.length) {
+      if (!data.features?.length) {
         console.log(`No results found for ${type}`);
         return [];
       }
 
-      // Filter and map the suggestions to our Store type
-      return data.suggestions
-        .filter((suggestion: any) => {
-          const name = suggestion.name.toLowerCase();
+      // Map the features to our Store type
+      return data.features
+        .filter((feature: any) => {
+          const name = feature.text.toLowerCase();
           const searchTerms = search.toLowerCase().split(' ');
           return searchTerms.some(term => name.includes(term.toLowerCase()));
         })
-        .map((suggestion: any) => ({
-          id: suggestion.mapbox_id,
-          name: suggestion.name,
-          address: suggestion.full_address || suggestion.place_formatted,
+        .map((feature: any) => ({
+          id: feature.id,
+          name: feature.text,
+          address: feature.place_name,
           phone: "(Call store for details)",
-          latitude: suggestion.coordinates?.latitude || suggestion.geometry.coordinates[1],
-          longitude: suggestion.coordinates?.longitude || suggestion.geometry.coordinates[0],
+          latitude: feature.center[1],
+          longitude: feature.center[0],
           type: type as Store['type']
         }));
     } catch (error) {
@@ -230,7 +231,6 @@ const SearchResults = () => {
       </div>
     </>
   );
-
 };
 
 export default SearchResults;
