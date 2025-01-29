@@ -43,7 +43,11 @@ const EXCLUDED_STORE_NAMES = [
   'walmart patio',
   'walmart garden',
   'walmart baby',
-  'walmart nursery'
+  'walmart nursery',
+  'publix pharmacy',
+  'walmart bakery',
+  'walmart connection center',
+  'walmart deli'
 ];
 
 const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: number) => {
