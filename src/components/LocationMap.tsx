@@ -12,6 +12,7 @@ interface LocationMapProps {
 const LocationMap = ({ stores, center }: LocationMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const markers = useRef<mapboxgl.Marker[]>([]);
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -28,18 +29,32 @@ const LocationMap = ({ stores, center }: LocationMapProps) => {
     getMapboxToken();
   }, []);
 
+  // Cleanup function to remove markers
+  const removeMarkers = () => {
+    markers.current.forEach(marker => marker.remove());
+    markers.current = [];
+  };
+
   useEffect(() => {
     if (!mapContainer.current || !mapboxToken) return;
 
     mapboxgl.accessToken = mapboxToken;
 
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: center,
-      zoom: 11
-    });
+    if (!map.current) {
+      map.current = new mapboxgl.Map({
+        container: mapContainer.current,
+        style: 'mapbox://styles/mapbox/streets-v12',
+        center: center,
+        zoom: 11
+      });
+    } else {
+      map.current.setCenter(center);
+    }
 
+    // Remove existing markers before adding new ones
+    removeMarkers();
+
+    // Add new markers
     stores.forEach((store) => {
       const marker = new mapboxgl.Marker({ color: '#FF4D6D' })
         .setLngLat([store.longitude, store.latitude])
@@ -48,9 +63,17 @@ const LocationMap = ({ stores, center }: LocationMapProps) => {
           <p>${store.address}</p>
         `))
         .addTo(map.current!);
+      
+      markers.current.push(marker);
     });
 
-    return () => map.current?.remove();
+    return () => {
+      removeMarkers();
+      if (map.current) {
+        map.current.remove();
+        map.current = null;
+      }
+    };
   }, [stores, center, mapboxToken]);
 
   return (
