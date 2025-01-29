@@ -1,6 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
-import { blogPosts } from '@/data/content';
+import { blogPosts, eventTypes } from '@/data/content';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Calendar, User } from 'lucide-react';
 import { Card } from '@/components/ui/card';
