@@ -10,7 +10,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-// More specific search terms for better results
 const STORE_SEARCHES = [
   { type: 'Kroger', search: 'Kroger Grocery Store' },
   { type: 'Albertsons', search: 'Albertsons Grocery Store' },
@@ -24,9 +23,7 @@ const STORE_SEARCHES = [
   { type: 'CVS', search: 'CVS Pharmacy' }
 ];
 
-// Calculate bounding box based on coordinates and radius in miles
 const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: number) => {
-  // Rough approximation: 1 degree = 69 miles
   const degreesPerMile = 1 / 69;
   const latDelta = radiusMiles * degreesPerMile;
   const lonDelta = radiusMiles * degreesPerMile / Math.cos(latitude * Math.PI / 180);
@@ -39,82 +36,66 @@ const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: 
   };
 };
 
+const searchStore = async (
+  type: string,
+  search: string,
+  latitude: number,
+  longitude: number,
+  radiusMiles: number,
+  mapboxToken: string
+): Promise<Store[]> => {
+  try {
+    const bbox = calculateBoundingBox(latitude, longitude, radiusMiles);
+    const searchUrl = new URL('https://api.mapbox.com/search/searchbox/v1/forward');
+    
+    searchUrl.searchParams.set('q', search);
+    searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
+    searchUrl.searchParams.set('bbox', `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}`);
+    searchUrl.searchParams.set('limit', '5');
+    searchUrl.searchParams.set('types', 'poi');
+    searchUrl.searchParams.set('access_token', mapboxToken);
+
+    console.log(`Searching for ${type}`); // Only log non-sensitive info
+
+    const response = await fetch(searchUrl.toString());
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (!data.features?.length) {
+      console.log(`No results found for ${type}`);
+      return [];
+    }
+
+    return data.features
+      .filter((feature: any) => {
+        const name = feature.properties.name?.toLowerCase() || '';
+        const searchTerms = search.toLowerCase().split(' ');
+        return searchTerms.some(term => name.includes(term.toLowerCase()));
+      })
+      .map((feature: any) => ({
+        id: feature.id,
+        name: feature.properties.name,
+        address: feature.properties.full_address || feature.place_name,
+        phone: "(Call store for details)",
+        latitude: feature.geometry.coordinates[1],
+        longitude: feature.geometry.coordinates[0],
+        type: type as Store['type']
+      }));
+  } catch (error) {
+    console.error(`Error searching for ${type}:`, error);
+    return [];
+  }
+};
+
 const SearchResults = () => {
   const { zipCode } = useParams();
   const [location, setLocation] = useState<Location | null>(null);
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchRadius, setSearchRadius] = useState(20);
-
-  // Separate function to handle individual store search
-  const searchStore = async (
-    type: string,
-    search: string,
-    latitude: number,
-    longitude: number,
-    radiusMiles: number,
-    mapboxToken: string
-  ): Promise<Store[]> => {
-    try {
-      const bbox = calculateBoundingBox(latitude, longitude, radiusMiles);
-      // Using the geocoding API instead of the search API
-      const searchUrl = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(search)}.json`);
-      searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
-      searchUrl.searchParams.set('bbox', `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}`);
-      searchUrl.searchParams.set('limit', '5');
-      searchUrl.searchParams.set('types', 'poi');
-      searchUrl.searchParams.set('access_token', mapboxToken);
-      
-      console.log(`Searching for ${type} with URL:`, searchUrl.toString());
-
-      const response = await fetch(searchUrl.toString());
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      
-      if (!data.features?.length) {
-        console.log(`No results found for ${type}`);
-        return [];
-      }
-
-      // Map the features to our Store type
-      return data.features
-        .filter((feature: any) => {
-          const name = feature.text.toLowerCase();
-          const searchTerms = search.toLowerCase().split(' ');
-          return searchTerms.some(term => name.includes(term.toLowerCase()));
-        })
-        .map((feature: any) => ({
-          id: feature.id,
-          name: feature.text,
-          address: feature.place_name,
-          phone: "(Call store for details)",
-          latitude: feature.center[1],
-          longitude: feature.center[0],
-          type: type as Store['type']
-        }));
-    } catch (error) {
-      console.error(`Error searching for ${type}:`, error);
-      return [];
-    }
-  };
-
-  const fetchStores = async (latitude: number, longitude: number, radius: number, mapboxToken: string) => {
-    try {
-      const results = await Promise.all(
-        STORE_SEARCHES.map(({ type, search }) =>
-          searchStore(type, search, latitude, longitude, radius, mapboxToken)
-        )
-      );
-      
-      return results.flat();
-    } catch (error) {
-      console.error('Error fetching stores:', error);
-      return [];
-    }
-  };
 
   useEffect(() => {
     const initializeSearch = async () => {
@@ -132,7 +113,7 @@ const SearchResults = () => {
           throw new Error('Could not retrieve Mapbox token');
         }
         
-        // Convert ZIP code to coordinates
+        // Convert ZIP code to coordinates using Mapbox Geocoding API
         const geocodingUrl = new URL(`https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json`);
         geocodingUrl.searchParams.set('country', 'US');
         geocodingUrl.searchParams.set('types', 'postcode');
@@ -162,9 +143,14 @@ const SearchResults = () => {
           zipCode: zipCode,
         });
 
-        // Search for stores
-        const storeResults = await fetchStores(latitude, longitude, searchRadius, MAPBOX_TOKEN);
-        setStores(storeResults);
+        // Search for stores using the frontend implementation
+        const storeResults = await Promise.all(
+          STORE_SEARCHES.map(({ type, search }) =>
+            searchStore(type, search, latitude, longitude, searchRadius, MAPBOX_TOKEN)
+          )
+        );
+        
+        setStores(storeResults.flat());
       } catch (error) {
         console.error('Error in search initialization:', error);
         toast.error('Error finding stores. Please try again.');
