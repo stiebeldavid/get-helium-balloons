@@ -7,6 +7,11 @@ import { Helmet } from "react-helmet";
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import NotFound from "./pages/NotFound";
+import CityPage from "./pages/CityPage";
+import EventPage from "./pages/EventPage";
+import CityEventPage from "./pages/CityEventPage";
+import BlogPost from "./pages/BlogPost";
+import BlogIndex from "./pages/BlogIndex";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +29,11 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/:zipCode" element={<SearchResults />} />
+          <Route path="/city/:citySlug" element={<CityPage />} />
+          <Route path="/events/:eventType" element={<EventPage />} />
+          <Route path="/events/:eventType/:citySlug" element={<CityEventPage />} />
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

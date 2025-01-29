@@ -16,3 +16,31 @@ export interface Location {
   state: string;
   zipCode: string;
 }
+
+export interface City {
+  name: string;
+  slug: string;
+  state: string;
+  description: string;
+  popularAreas: string[];
+  mainZipCodes: string[];
+}
+
+export interface EventType {
+  name: string;
+  slug: string;
+  description: string;
+  tips: string[];
+  popularBalloonTypes: string[];
+}
+
+export interface BlogPost {
+  title: string;
+  slug: string;
+  excerpt: string;
+  content: string;
+  publishDate: string;
+  author: string;
+  relatedEvents: string[];
+  relatedCities: string[];
+}
