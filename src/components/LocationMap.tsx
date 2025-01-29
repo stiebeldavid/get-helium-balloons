@@ -1,7 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Store } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LocationMapProps {
   stores: Store[];
@@ -11,11 +12,26 @@ interface LocationMapProps {
 const LocationMap = ({ stores, center }: LocationMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
+  const [mapboxToken, setMapboxToken] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current) return;
+    const getMapboxToken = async () => {
+      const { data: { MAPBOX_TOKEN }, error } = await supabase.functions.invoke('get-secret', {
+        body: { secretName: 'MAPBOX_TOKEN' }
+      });
 
-    mapboxgl.accessToken = 'YOUR_MAPBOX_TOKEN'; // We'll need to handle this properly
+      if (!error && MAPBOX_TOKEN) {
+        setMapboxToken(MAPBOX_TOKEN);
+      }
+    };
+
+    getMapboxToken();
+  }, []);
+
+  useEffect(() => {
+    if (!mapContainer.current || !mapboxToken) return;
+
+    mapboxgl.accessToken = mapboxToken;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -35,7 +51,7 @@ const LocationMap = ({ stores, center }: LocationMapProps) => {
     });
 
     return () => map.current?.remove();
-  }, [stores, center]);
+  }, [stores, center, mapboxToken]);
 
   return (
     <div className="h-[500px] w-full rounded-lg overflow-hidden shadow-lg">

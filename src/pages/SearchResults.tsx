@@ -6,6 +6,7 @@ import StoreList from '@/components/StoreList';
 import SearchForm from '@/components/SearchForm';
 import { Store, Location } from '@/types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const STORE_TYPES = ['Kroger', 'Albertsons', 'Publix', 'Safeway', 'Food Lion', 'Dollar Tree', 'Dollar General', 'Walmart', 'Michaels', 'CVS'];
 
@@ -20,9 +21,18 @@ const SearchResults = () => {
       try {
         setLoading(true);
         
+        // Get Mapbox token from Supabase
+        const { data: { MAPBOX_TOKEN }, error: secretError } = await supabase.functions.invoke('get-secret', {
+          body: { secretName: 'MAPBOX_TOKEN' }
+        });
+
+        if (secretError || !MAPBOX_TOKEN) {
+          throw new Error('Could not retrieve Mapbox token');
+        }
+        
         // First, convert ZIP code to coordinates using Mapbox Geocoding API
         const geocodingResponse = await fetch(
-          `https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?country=US&types=postcode&access_token=${process.env.MAPBOX_TOKEN}`
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?country=US&types=postcode&access_token=${MAPBOX_TOKEN}`
         );
         const geocodingData = await geocodingResponse.json();
         
@@ -46,7 +56,7 @@ const SearchResults = () => {
         // Now search for stores near this location
         const storePromises = STORE_TYPES.map(async (type) => {
           const response = await fetch(
-            `https://api.mapbox.com/geocoding/v5/mapbox.places/${type}.json?proximity=${longitude},${latitude}&types=poi&limit=2&access_token=${process.env.MAPBOX_TOKEN}`
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${type}.json?proximity=${longitude},${latitude}&types=poi&limit=2&access_token=${MAPBOX_TOKEN}`
           );
           const data = await response.json();
           return data.features.map((feature: any) => ({
