@@ -19,14 +19,32 @@ serve(async (req) => {
       throw new Error('MAPBOX_TOKEN is not configured');
     }
 
+    // Calculate bounding box
+    const degreesPerMile = 1 / 69;
+    const latDelta = radiusMiles * degreesPerMile;
+    const lonDelta = radiusMiles * degreesPerMile / Math.cos(latitude * Math.PI / 180);
+    const bbox = {
+      minLon: longitude - lonDelta,
+      minLat: latitude - latDelta,
+      maxLon: longitude + lonDelta,
+      maxLat: latitude + latDelta
+    };
+
     console.log('Search parameters:');
     console.log('- Type:', type);
     console.log('- Search term:', search);
     console.log('- Location:', `[${longitude}, ${latitude}]`);
     console.log('- Radius:', radiusMiles, 'miles');
+    console.log('- Bounding box:', bbox);
 
-    // Construct the URL with query parameters in the correct order
-    const url = `https://api.mapbox.com/search/searchbox/v1/forward?q=${encodeURIComponent(search)}&language=en&limit=5&proximity=${longitude},${latitude}&country=US&access_token=${MAPBOX_TOKEN}`;
+    // Construct the URL with query parameters matching the example syntax
+    const url = `https://api.mapbox.com/search/searchbox/v1/forward?` + 
+      `q=${encodeURIComponent(search)}` +
+      `&proximity=${longitude},${latitude}` +
+      `&bbox=${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}` +
+      `&limit=5` +
+      `&types=poi` +
+      `&access_token=${MAPBOX_TOKEN}`;
     
     console.log('Making Mapbox API request:');
     console.log('- Endpoint: Search Box API v1 Forward');
@@ -52,7 +70,7 @@ serve(async (req) => {
     // Map the features to our Store type
     const stores = data.features
       .filter((feature: any) => {
-        const name = feature.properties.name.toLowerCase();
+        const name = feature.properties.name?.toLowerCase() || '';
         const searchTerms = search.toLowerCase().split(' ');
         return searchTerms.some(term => name.includes(term.toLowerCase()));
       })
