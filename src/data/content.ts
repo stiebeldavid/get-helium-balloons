@@ -13,7 +13,7 @@ export const cities: City[] = [
     name: 'Los Angeles',
     slug: 'los-angeles',
     state: 'CA',
-    description: 'Discover helium balloon suppliers throughout Los Angeles. Whether you're in Downtown LA, Hollywood, or the Valley, find the perfect balloon service for your next event.',
+    description: "Discover helium balloon suppliers throughout Los Angeles. Whether you're in Downtown LA, Hollywood, or the Valley, find the perfect balloon service for your next event.",
     popularAreas: ['Downtown LA', 'Hollywood', 'Santa Monica', 'Beverly Hills', 'Venice'],
     mainZipCodes: ['90001', '90012', '90024', '90210', '90291']
   }
@@ -48,7 +48,7 @@ export const eventTypes: EventType[] = [
 
 export const blogPosts: BlogPost[] = [
   {
-    title: 'Ultimate Guide to Planning a Child's Birthday Party',
+    title: "Ultimate Guide to Planning a Child's Birthday Party",
     slug: 'ultimate-guide-birthday-party-planning',
     excerpt: 'Everything you need to know about planning the perfect birthday celebration for your child, from decorations to entertainment.',
     content: `
