@@ -10,7 +10,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const STORE_TYPES = ['Kroger', 'Albertsons', 'Publix', 'Safeway', 'Food Lion', 'Dollar Tree', 'Dollar General', 'Walmart', 'Michaels', 'CVS'];
+// More specific search terms for better results
+const STORE_SEARCHES = [
+  { type: 'Kroger', search: 'Kroger Grocery Store' },
+  { type: 'Albertsons', search: 'Albertsons Grocery Store' },
+  { type: 'Publix', search: 'Publix Super Market' },
+  { type: 'Safeway', search: 'Safeway Grocery Store' },
+  { type: 'Food Lion', search: 'Food Lion Grocery Store' },
+  { type: 'Dollar Tree', search: 'Dollar Tree Store' },
+  { type: 'Dollar General', search: 'Dollar General Store' },
+  { type: 'Walmart', search: 'Walmart Supercenter' },
+  { type: 'Michaels', search: 'Michaels Arts and Crafts' },
+  { type: 'CVS', search: 'CVS Pharmacy' }
+];
 
 const SearchResults = () => {
   const { zipCode } = useParams();
@@ -20,28 +32,48 @@ const SearchResults = () => {
   const [searchRadius, setSearchRadius] = useState(20);
 
   const fetchStores = async (latitude: number, longitude: number, radius: number, mapboxToken: string) => {
-    const storePromises = STORE_TYPES.map(async (type) => {
+    const storePromises = STORE_SEARCHES.map(async ({ type, search }) => {
       // Convert radius from miles to meters (1 mile ≈ 1609.34 meters)
       const radiusMeters = radius * 1609.34;
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${type}.json?proximity=${longitude},${latitude}&types=poi&limit=3&radius=${radiusMeters}&access_token=${mapboxToken}`
-      );
-      const data = await response.json();
       
-      if (!data.features) {
-        console.error('No features returned for type:', type);
+      // Enhanced search URL with better parameters
+      const url = new URL('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(search) + '.json');
+      url.searchParams.append('proximity', `${longitude},${latitude}`);
+      url.searchParams.append('types', 'poi');
+      url.searchParams.append('limit', '5');
+      url.searchParams.append('radius', radiusMeters.toString());
+      url.searchParams.append('fuzzyMatch', 'true');
+      url.searchParams.append('access_token', mapboxToken);
+      
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (!data.features) {
+          console.error('No features returned for type:', type);
+          return [];
+        }
+
+        // Filter results to ensure they match our search term more closely
+        const filteredFeatures = data.features.filter((feature: any) => {
+          const name = feature.text.toLowerCase();
+          const searchTerms = search.toLowerCase().split(' ');
+          return searchTerms.some(term => name.includes(term.toLowerCase()));
+        });
+
+        return filteredFeatures.map((feature: any) => ({
+          id: feature.id,
+          name: feature.text,
+          address: feature.place_name,
+          phone: "(Call store for details)", // Mapbox doesn't provide phone numbers
+          latitude: feature.center[1],
+          longitude: feature.center[0],
+          type: type as Store['type']
+        }));
+      } catch (error) {
+        console.error(`Error fetching ${type} stores:`, error);
         return [];
       }
-
-      return data.features.map((feature: any) => ({
-        id: feature.id,
-        name: feature.text,
-        address: feature.place_name,
-        phone: "(Call store for details)", // Mapbox doesn't provide phone numbers
-        latitude: feature.center[1],
-        longitude: feature.center[0],
-        type: type as Store['type']
-      }));
     });
 
     const storeResults = await Promise.all(storePromises);
