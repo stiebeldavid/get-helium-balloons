@@ -7,12 +7,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface LocationMapProps {
   stores: Store[];
   center: [number, number];
+  selectedStoreId?: string;
 }
 
-const LocationMap = ({ stores, center }: LocationMapProps) => {
+const LocationMap = ({ stores, center, selectedStoreId }: LocationMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
-  const markers = useRef<mapboxgl.Marker[]>([]);
+  const markers = useRef<{ [key: string]: mapboxgl.Marker }>({});
   const [mapboxToken, setMapboxToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -31,8 +32,8 @@ const LocationMap = ({ stores, center }: LocationMapProps) => {
 
   // Cleanup function to remove markers
   const removeMarkers = () => {
-    markers.current.forEach(marker => marker.remove());
-    markers.current = [];
+    Object.values(markers.current).forEach(marker => marker.remove());
+    markers.current = {};
   };
 
   useEffect(() => {
@@ -64,7 +65,7 @@ const LocationMap = ({ stores, center }: LocationMapProps) => {
         `))
         .addTo(map.current!);
       
-      markers.current.push(marker);
+      markers.current[store.id] = marker;
     });
 
     return () => {
@@ -75,6 +76,27 @@ const LocationMap = ({ stores, center }: LocationMapProps) => {
       }
     };
   }, [stores, center, mapboxToken]);
+
+  // Effect to handle selected store
+  useEffect(() => {
+    if (!map.current || !selectedStoreId) return;
+
+    const selectedStore = stores.find(store => store.id === selectedStoreId);
+    if (!selectedStore) return;
+
+    // Center map on selected store
+    map.current.flyTo({
+      center: [selectedStore.longitude, selectedStore.latitude],
+      zoom: 15,
+      duration: 1000
+    });
+
+    // Open popup for selected marker
+    const marker = markers.current[selectedStoreId];
+    if (marker) {
+      marker.togglePopup();
+    }
+  }, [selectedStoreId, stores]);
 
   return (
     <div className="h-[500px] w-full rounded-lg overflow-hidden shadow-lg">

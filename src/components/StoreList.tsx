@@ -9,9 +9,10 @@ interface StoreListProps {
   stores: Store[];
   searchRadius: number;
   onRadiusChange: (radius: number) => void;
+  onStoreSelect?: (storeId: string) => void;
 }
 
-const StoreList = ({ stores, searchRadius, onRadiusChange }: StoreListProps) => {
+const StoreList = ({ stores, searchRadius, onRadiusChange, onStoreSelect }: StoreListProps) => {
   // Helper function to format the address
   const formatAddress = (fullAddress: string) => {
     // Split the address into parts
@@ -29,6 +30,12 @@ const StoreList = ({ stores, searchRadius, onRadiusChange }: StoreListProps) => 
     
     // Fallback to original address if we can't parse it
     return fullAddress;
+  };
+
+  const handleCardClick = (e: React.MouseEvent, store: Store) => {
+    // Prevent click if the target is the external link
+    if ((e.target as HTMLElement).closest('a')) return;
+    onStoreSelect?.(store.id);
   };
 
   return (
@@ -59,7 +66,11 @@ const StoreList = ({ stores, searchRadius, onRadiusChange }: StoreListProps) => 
         </Alert>
       ) : (
         stores.map((store) => (
-          <Card key={store.id} className="p-4 hover:shadow-md transition-shadow">
+          <Card 
+            key={store.id} 
+            className="p-4 hover:shadow-md transition-shadow cursor-pointer"
+            onClick={(e) => handleCardClick(e, store)}
+          >
             <div className="flex justify-between items-start">
               <div className="space-y-2">
                 <div className="flex items-center gap-2">

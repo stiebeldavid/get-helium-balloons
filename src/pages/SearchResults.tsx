@@ -135,6 +135,7 @@ const SearchResults = () => {
   const [stores, setStores] = useState<Store[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchRadius, setSearchRadius] = useState(5);
+  const [selectedStoreId, setSelectedStoreId] = useState<string | undefined>();
 
   useEffect(() => {
     const initializeSearch = async () => {
@@ -246,7 +247,8 @@ const SearchResults = () => {
               <div>
                 <LocationMap 
                   stores={stores} 
-                  center={[location?.longitude || 0, location?.latitude || 0]} 
+                  center={[location?.longitude || 0, location?.latitude || 0]}
+                  selectedStoreId={selectedStoreId}
                 />
               </div>
               <div>
@@ -254,6 +256,7 @@ const SearchResults = () => {
                   stores={stores} 
                   searchRadius={searchRadius}
                   onRadiusChange={setSearchRadius}
+                  onStoreSelect={setSelectedStoreId}
                 />
               </div>
             </div>
