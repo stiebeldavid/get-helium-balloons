@@ -21,19 +21,12 @@ serve(async (req) => {
 
     console.log(`Searching for ${type} (${search}) near [${longitude}, ${latitude}]`);
 
-    // Construct the Search Box API URL with the new syntax
-    const searchUrl = new URL('https://api.mapbox.com/search/searchbox/v1/forward');
-    searchUrl.searchParams.set('q', search);
-    searchUrl.searchParams.set('language', 'en');
-    searchUrl.searchParams.set('limit', '5');
-    searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
-    searchUrl.searchParams.set('country', 'US');
-    searchUrl.searchParams.set('types', 'poi');
-    searchUrl.searchParams.set('access_token', MAPBOX_TOKEN);
+    // Construct the URL with query parameters in the correct order
+    const url = `https://api.mapbox.com/search/searchbox/v1/forward?q=${encodeURIComponent(search)}&language=en&limit=5&proximity=${longitude},${latitude}&country=US&access_token=${MAPBOX_TOKEN}`;
     
-    console.log('Search URL:', searchUrl.toString());
+    console.log('Search URL:', url);
 
-    const response = await fetch(searchUrl.toString());
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
