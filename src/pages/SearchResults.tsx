@@ -5,6 +5,9 @@ import LocationMap from '@/components/LocationMap';
 import StoreList from '@/components/StoreList';
 import SearchForm from '@/components/SearchForm';
 import { Store, Location } from '@/types';
+import { toast } from 'sonner';
+
+const STORE_TYPES = ['Kroger', 'Albertsons', 'Publix', 'Safeway', 'Food Lion', 'Dollar Tree', 'Dollar General', 'Walmart', 'Michaels', 'CVS'];
 
 const SearchResults = () => {
   const { zipCode } = useParams();
@@ -13,36 +16,71 @@ const SearchResults = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // In a real implementation, we would:
-    // 1. Convert ZIP to lat/lng using a geocoding service
-    // 2. Fetch nearby stores from our database/API
-    // For now, we'll use mock data
-    setLocation({
-      latitude: 42.3314,
-      longitude: -83.0458,
-      city: "Detroit",
-      state: "MI",
-      zipCode: zipCode || "",
-    });
+    const fetchStores = async () => {
+      try {
+        setLoading(true);
+        
+        // First, convert ZIP code to coordinates using Mapbox Geocoding API
+        const geocodingResponse = await fetch(
+          `https://api.mapbox.com/geocoding/v5/mapbox.places/${zipCode}.json?country=US&types=postcode&access_token=${process.env.MAPBOX_TOKEN}`
+        );
+        const geocodingData = await geocodingResponse.json();
+        
+        if (!geocodingData.features?.length) {
+          throw new Error('ZIP code not found');
+        }
 
-    setStores([
-      {
-        id: "1",
-        name: "Walmart Supercenter",
-        address: "123 Main St, Detroit, MI",
-        phone: "(313) 555-0123",
-        latitude: 42.3314,
-        longitude: -83.0458,
-        type: "Walmart",
-      },
-      // Add more mock stores here
-    ]);
+        const [longitude, latitude] = geocodingData.features[0].center;
+        const placeName = geocodingData.features[0].place_name;
+        const [city, stateZip] = placeName.split(', ').slice(0, 2);
+        const state = stateZip.split(' ')[0];
 
-    setLoading(false);
+        setLocation({
+          latitude,
+          longitude,
+          city,
+          state,
+          zipCode: zipCode || "",
+        });
+
+        // Now search for stores near this location
+        const storePromises = STORE_TYPES.map(async (type) => {
+          const response = await fetch(
+            `https://api.mapbox.com/geocoding/v5/mapbox.places/${type}.json?proximity=${longitude},${latitude}&types=poi&limit=2&access_token=${process.env.MAPBOX_TOKEN}`
+          );
+          const data = await response.json();
+          return data.features.map((feature: any) => ({
+            id: feature.id,
+            name: feature.text,
+            address: feature.place_name,
+            phone: "(Call store for details)", // Mapbox doesn't provide phone numbers
+            latitude: feature.center[1],
+            longitude: feature.center[0],
+            type: type as Store['type']
+          }));
+        });
+
+        const storeResults = await Promise.all(storePromises);
+        setStores(storeResults.flat());
+        setLoading(false);
+      } catch (error) {
+        console.error('Error fetching stores:', error);
+        toast.error('Error finding stores. Please try again.');
+        setLoading(false);
+      }
+    };
+
+    if (zipCode) {
+      fetchStores();
+    }
   }, [zipCode]);
 
   if (loading || !location) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-white to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-balloon-red"></div>
+      </div>
+    );
   }
 
   return (
