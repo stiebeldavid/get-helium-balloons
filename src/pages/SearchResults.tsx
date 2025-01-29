@@ -59,7 +59,6 @@ const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: 
   };
 };
 
-// New helper function to calculate distance between two points
 const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
   const R = 3959; // Earth's radius in miles
   const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -244,7 +243,7 @@ const SearchResults = () => {
             </div>
 
             <h1 className="text-3xl font-bold mb-6">
-              Helium Balloon Stores in {location?.city}, {location?.state}
+              Stores that sell and/or fill helium balloons near {location?.city}, {location?.state}
             </h1>
 
             <div className="grid lg:grid-cols-2 gap-8">
