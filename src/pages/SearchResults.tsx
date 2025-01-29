@@ -11,16 +11,19 @@ import { Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STORE_SEARCHES = [
-  { type: 'Kroger', search: 'Kroger Grocery Store' },
-  { type: 'Albertsons', search: 'Albertsons Grocery Store' },
-  { type: 'Publix', search: 'Publix Super Market' },
-  { type: 'Safeway', search: 'Safeway Grocery Store' },
-  { type: 'Food Lion', search: 'Food Lion Grocery Store' },
-  { type: 'Dollar Tree', search: 'Dollar Tree Store' },
-  { type: 'Dollar General', search: 'Dollar General Store' },
-  { type: 'Walmart', search: 'Walmart Supercenter' },
-  { type: 'Michaels', search: 'Michaels Arts and Crafts' },
-  { type: 'CVS', search: 'CVS Pharmacy' }
+  { type: 'Kroger', search: 'Kroger' },
+  { type: 'Albertsons', search: 'Albertsons' },
+  { type: 'Publix', search: 'Publix' },
+  { type: 'Safeway', search: 'Safeway' },
+  { type: 'Food Lion', search: 'Food Lion' },
+  { type: 'Dollar Tree', search: 'Dollar Tree' },
+  { type: 'Dollar General', search: 'Dollar General' },
+  { type: 'Family Dollar', search: 'Family Dollar' },
+  { type: 'Five Below', search: 'Five Below' },
+  { type: '99 Cents Only', search: '99 Cents Only' },
+  { type: 'Walmart', search: 'Walmart' },
+  { type: 'Michaels', search: 'Michaels' },
+  { type: 'CVS', search: 'CVS' }
 ];
 
 const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: number) => {
@@ -85,8 +88,8 @@ const searchStore = async (
     return data.features
       .filter((feature: any) => {
         const name = feature.properties.name?.toLowerCase() || '';
-        const searchTerms = search.toLowerCase().split(' ');
-        return searchTerms.some(term => name.includes(term.toLowerCase()));
+        const searchTerm = search.toLowerCase();
+        return name.includes(searchTerm);
       })
       .map((feature: any) => ({
         id: feature.id,

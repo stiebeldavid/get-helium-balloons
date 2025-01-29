@@ -5,7 +5,7 @@ export interface Store {
   phone: string;
   latitude: number;
   longitude: number;
-  type: 'Kroger' | 'Albertsons' | 'Publix' | 'Safeway' | 'Food Lion' | 'Dollar Tree' | 'Dollar General' | 'Walmart' | 'Michaels' | 'CVS';
+  type: 'Kroger' | 'Albertsons' | 'Publix' | 'Safeway' | 'Food Lion' | 'Dollar Tree' | 'Dollar General' | 'Family Dollar' | 'Five Below' | '99 Cents Only' | 'Walmart' | 'Michaels' | 'CVS';
   distance?: number;
 }
 
