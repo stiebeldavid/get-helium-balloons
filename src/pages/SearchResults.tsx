@@ -243,7 +243,7 @@ const SearchResults = () => {
             </div>
 
             <h1 className="text-3xl font-bold mb-6">
-              Stores that sell and/or fill helium balloons near {location?.city}, {location?.state}
+              Stores with helium balloons near {location?.city}, {location?.state}
             </h1>
 
             <div className="grid lg:grid-cols-2 gap-8">
