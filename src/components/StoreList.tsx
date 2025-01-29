@@ -12,6 +12,25 @@ interface StoreListProps {
 }
 
 const StoreList = ({ stores, searchRadius, onRadiusChange }: StoreListProps) => {
+  // Helper function to format the address
+  const formatAddress = (fullAddress: string) => {
+    // Split the address into parts
+    const parts = fullAddress.split(',').map(part => part.trim());
+    
+    if (parts.length >= 3) {
+      const street = parts[0];
+      const city = parts[1];
+      // Get state abbreviation (assuming it's in the format "State ZIP" or just "State")
+      const stateZip = parts[2].trim().split(' ');
+      const state = stateZip[0];
+      
+      return `${street}, ${city}, ${state}`;
+    }
+    
+    // Fallback to original address if we can't parse it
+    return fullAddress;
+  };
+
   return (
     <div className="space-y-4">
       <div className="mb-6">
@@ -51,7 +70,7 @@ const StoreList = ({ stores, searchRadius, onRadiusChange }: StoreListProps) => 
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <MapPin className="h-4 w-4" />
-                  <p>{store.address}</p>
+                  <p>{formatAddress(store.address)}</p>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
                   <Phone className="h-4 w-4" />
