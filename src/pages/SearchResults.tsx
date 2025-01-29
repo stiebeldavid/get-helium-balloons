@@ -200,6 +200,21 @@ const SearchResults = () => {
           .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
         setStores(sortedStores);
+
+        // Log the search results to Supabase
+        const { error: insertError } = await supabase
+          .from('searches')
+          .insert({
+            zip_code: zipCode,
+            first_result: sortedStores[0]?.name || null,
+            second_result: sortedStores[1]?.name || null,
+            third_result: sortedStores[2]?.name || null
+          });
+
+        if (insertError) {
+          console.error('Error logging search:', insertError);
+        }
+
       } catch (error) {
         console.error('Error in search initialization:', error);
         toast.error('Error finding stores. Please try again.');
