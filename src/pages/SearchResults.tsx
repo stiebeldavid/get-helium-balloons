@@ -24,6 +24,21 @@ const STORE_SEARCHES = [
   { type: 'CVS', search: 'CVS Pharmacy' }
 ];
 
+// Calculate bounding box based on coordinates and radius in miles
+const calculateBoundingBox = (latitude: number, longitude: number, radiusMiles: number) => {
+  // Rough approximation: 1 degree = 69 miles
+  const degreesPerMile = 1 / 69;
+  const latDelta = radiusMiles * degreesPerMile;
+  const lonDelta = radiusMiles * degreesPerMile / Math.cos(latitude * Math.PI / 180);
+
+  return {
+    minLon: longitude - lonDelta,
+    minLat: latitude - latDelta,
+    maxLon: longitude + lonDelta,
+    maxLat: latitude + latDelta
+  };
+};
+
 const SearchResults = () => {
   const { zipCode } = useParams();
   const [location, setLocation] = useState<Location | null>(null);
@@ -37,17 +52,19 @@ const SearchResults = () => {
     search: string,
     latitude: number,
     longitude: number,
-    radiusMeters: number,
+    radiusMiles: number,
     mapboxToken: string
   ): Promise<Store[]> => {
     try {
-      const searchUrl = new URL('https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(search) + '.json');
+      const bbox = calculateBoundingBox(latitude, longitude, radiusMiles);
+      const searchUrl = new URL('https://api.mapbox.com/search/v1/suggest');
+      searchUrl.searchParams.set('q', search);
       searchUrl.searchParams.set('proximity', `${longitude},${latitude}`);
-      searchUrl.searchParams.set('types', 'poi');
+      searchUrl.searchParams.set('bbox', `${bbox.minLon},${bbox.minLat},${bbox.maxLon},${bbox.maxLat}`);
       searchUrl.searchParams.set('limit', '5');
-      searchUrl.searchParams.set('radius', radiusMeters.toString());
-      searchUrl.searchParams.set('fuzzyMatch', 'true');
       searchUrl.searchParams.set('access_token', mapboxToken);
+      
+      console.log(`Searching for ${type} with URL:`, searchUrl.toString());
 
       const response = await fetch(searchUrl.toString());
       if (!response.ok) {
@@ -56,25 +73,25 @@ const SearchResults = () => {
       
       const data = await response.json();
       
-      if (!data.features?.length) {
+      if (!data.suggestions?.length) {
         console.log(`No results found for ${type}`);
         return [];
       }
 
-      // Filter results to ensure they match our search term more closely
-      return data.features
-        .filter((feature: any) => {
-          const name = feature.text.toLowerCase();
+      // Filter and map the suggestions to our Store type
+      return data.suggestions
+        .filter((suggestion: any) => {
+          const name = suggestion.name.toLowerCase();
           const searchTerms = search.toLowerCase().split(' ');
           return searchTerms.some(term => name.includes(term.toLowerCase()));
         })
-        .map((feature: any) => ({
-          id: feature.id,
-          name: feature.text,
-          address: feature.place_name,
+        .map((suggestion: any) => ({
+          id: suggestion.mapbox_id,
+          name: suggestion.name,
+          address: suggestion.full_address || suggestion.place_formatted,
           phone: "(Call store for details)",
-          latitude: feature.center[1],
-          longitude: feature.center[0],
+          latitude: suggestion.coordinates?.latitude || suggestion.geometry.coordinates[1],
+          longitude: suggestion.coordinates?.longitude || suggestion.geometry.coordinates[0],
           type: type as Store['type']
         }));
     } catch (error) {
@@ -84,12 +101,10 @@ const SearchResults = () => {
   };
 
   const fetchStores = async (latitude: number, longitude: number, radius: number, mapboxToken: string) => {
-    const radiusMeters = radius * 1609.34; // Convert miles to meters
-    
     try {
       const results = await Promise.all(
         STORE_SEARCHES.map(({ type, search }) =>
-          searchStore(type, search, latitude, longitude, radiusMeters, mapboxToken)
+          searchStore(type, search, latitude, longitude, radius, mapboxToken)
         )
       );
       
@@ -215,6 +230,7 @@ const SearchResults = () => {
       </div>
     </>
   );
+
 };
 
 export default SearchResults;
