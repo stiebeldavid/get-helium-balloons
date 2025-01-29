@@ -2,7 +2,8 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 import SearchForm from '@/components/SearchForm';
 import { Card } from '@/components/ui/card';
-import { cities, eventTypes } from '@/data/content';
+import { cities, eventTypes, blogPosts } from '@/data/content';
+import { BookOpen } from 'lucide-react';
 
 const Index = () => {
   return (
@@ -63,6 +64,32 @@ const Index = () => {
                   ))}
                 </ul>
               </Card>
+            </div>
+
+            <div className="mt-16">
+              <div className="flex items-center justify-center gap-2 mb-8">
+                <BookOpen className="w-6 h-6 text-balloon-purple" />
+                <h2 className="text-2xl font-semibold">Latest from Our Blog</h2>
+              </div>
+              <div className="grid gap-6 max-w-2xl mx-auto">
+                {blogPosts.slice(0, 2).map(post => (
+                  <Link key={post.slug} to={`/blog/${post.slug}`}>
+                    <Card className="p-6 text-left hover:shadow-lg transition-shadow">
+                      <h3 className="text-xl font-semibold mb-2 text-gray-900 hover:text-blue-600">
+                        {post.title}
+                      </h3>
+                      <p className="text-gray-600 text-sm">{post.excerpt}</p>
+                    </Card>
+                  </Link>
+                ))}
+                <Link 
+                  to="/blog"
+                  className="inline-flex items-center justify-center gap-2 text-balloon-purple hover:text-balloon-blue transition-colors"
+                >
+                  <span>Read more articles</span>
+                  <BookOpen className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
 
             <div className="mt-16 text-left space-y-6">
