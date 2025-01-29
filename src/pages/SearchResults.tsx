@@ -7,7 +7,7 @@ import SearchForm from '@/components/SearchForm';
 import { Store, Location } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { Home } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const STORE_SEARCHES = [
@@ -232,13 +232,23 @@ const SearchResults = () => {
       <div className="min-h-screen bg-gradient-to-b from-white to-blue-50">
         <div className="container px-4 py-8">
           <div className="max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
+            <div className="md:hidden mb-4">
+              <Link to="/">
+                <ChevronLeft className="h-6 w-6 text-gray-500" />
+              </Link>
+            </div>
+            
+            <div className="hidden md:flex justify-between items-center mb-8">
               <Link to="/">
                 <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <Home className="h-4 w-4" />
+                  <ChevronLeft className="h-4 w-4" />
                   Home
                 </Button>
               </Link>
+              <SearchForm />
+            </div>
+
+            <div className="md:hidden mb-8">
               <SearchForm />
             </div>
 
